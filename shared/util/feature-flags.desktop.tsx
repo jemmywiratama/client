@@ -14,6 +14,7 @@ const ff: FeatureFlags = {
   airdrop: true,
   audioAttachments: false,
   chatIndexProfilingEnabled: false,
+  cryptoTab: false,
   conflictResolution: false,
   dbCleanEnabled: false,
   fastAccountSwitch: true,

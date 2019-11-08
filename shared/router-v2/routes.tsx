@@ -48,6 +48,7 @@ _newRoutes.forEach(({route, tab}) => {
 export const tabRoots = {
   [Tabs.peopleTab]: 'peopleRoot',
   [Tabs.chatTab]: 'chatRoot',
+  [Tabs.cryptoTab]: 'cryptoRoot',
   [Tabs.fsTab]: 'fsRoot',
   [Tabs.teamsTab]: 'teamsRoot',
   [Tabs.walletsTab]: 'walletsRoot',
