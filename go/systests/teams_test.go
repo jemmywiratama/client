@@ -1971,3 +1971,31 @@ func TestTeamMetadataUpdateNotifications(t *testing.T) {
 
 	tt.users[1].waitForNoMetadataUpdatesGregor()
 }
+
+func TestTeamRotateRace(t *testing.T) {
+	tt := newTeamTester(t)
+	defer tt.cleanup()
+
+	tt.addUser("alf")
+	tt.addUser("bra")
+	tt.addUser("cha")
+
+	team := tt.users[0].createTeam()
+	parentName, err := keybase1.TeamNameFromString(team)
+	require.NoError(t, err)
+	_, err = teams.CreateSubteam(context.TODO(), tt.users[0].tc.G, "bb", parentName, keybase1.TeamRole_NONE /* addSelfAs */)
+	require.NoError(t, err)
+	subteamName, err := parentName.Append("bb")
+	require.NoError(t, err)
+	_, err = teams.CreateSubteam(context.TODO(), tt.users[0].tc.G, "cc", subteamName, keybase1.TeamRole_NONE /* addSelfAs */)
+	require.NoError(t, err)
+	subsubteamName, err := subteamName.Append("cc")
+	require.NoError(t, err)
+
+	tt.users[0].addTeamMember(parentName.String(), tt.users[1].username, keybase1.TeamRole_ADMIN)
+	tt.users[0].changeTeamMember(parentName.String(), tt.users[1].username, keybase1.TeamRole_READER)
+
+	tt.users[0].teamSetSettings(subsubteamName.String(), keybase1.TeamSettings{Open: true, JoinAs: keybase1.TeamRole_WRITER})
+	time.Sleep(10 * time.Second)
+	tt.users[0].teamSetSettings(subsubteamName.String(), keybase1.TeamSettings{Open: true, JoinAs: keybase1.TeamRole_READER})
+}
