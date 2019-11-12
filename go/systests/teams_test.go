@@ -1896,114 +1896,80 @@ func TestTeamMetadataUpdateNotifications(t *testing.T) {
 
 	t.Logf("Start testing metadata updates")
 
-	tt.users[0].addTeamMember(parentName.String(), tt.users[2].username, keybase1.TeamRole_ADMIN)
+	tt.users[0].addTeamMember(subsubteamName.String(), tt.users[2].username, keybase1.TeamRole_ADMIN)
 	tt.users[2].waitForMetadataUpdateGregor("added to team")
 
-	// tt.users[0].addTeamMember(parentName.String(), tt.users[1].username, keybase1.TeamRole_ADMIN)
-	// tt.users[1].waitForMetadataUpdateGregor("added to team")
-
-	// tt.users[0].changeTeamMember(parentName.String(), tt.users[1].username, keybase1.TeamRole_WRITER)
-	// tt.users[1].waitForMetadataUpdateGregor("no longer impadmin")
-
-	// tt.users[0].changeTeamMember(parentName.String(), tt.users[1].username, keybase1.TeamRole_ADMIN)
-	// tt.users[1].waitForMetadataUpdateGregor("back to admin")
-
-	// tt.users[0].removeTeamMember(parentName.String(), tt.users[1].username)
-	// tt.users[1].waitForMetadataUpdateGregor("removed from team")
-
-	parentid, err := teams.ResolveNameToID(context.TODO(), tt.users[2].tc.G, parentName)
-	require.NoError(t, err)
-	subteamid, err := teams.ResolveNameToID(context.TODO(), tt.users[2].tc.G, subteamName)
-	require.NoError(t, err)
-	subsubteamid, err := teams.ResolveNameToID(context.TODO(), tt.users[2].tc.G, subsubteamName)
-	require.NoError(t, err)
-	fmt.Println(parentid)
-	fmt.Println(subteamid)
-	fmt.Println(subsubteamid)
-	err = teams.RotateKey(context.TODO(), tt.users[0].tc.G, keybase1.TeamRotateKeyArg{TeamID: parentid, Rt: keybase1.RotationType_HIDDEN})
-	require.NoError(t, err)
-	err = teams.RotateKey(context.TODO(), tt.users[0].tc.G, keybase1.TeamRotateKeyArg{TeamID: subteamid, Rt: keybase1.RotationType_HIDDEN})
-	require.NoError(t, err)
-	// err = teams.RotateKey(context.TODO(), tt.users[0].tc.G, keybase1.TeamRotateKeyArg{TeamID: subsubteamid, Rt: keybase1.RotationType_HIDDEN})
-	// require.NoError(t, err)
-
 	tt.users[0].addTeamMember(parentName.String(), tt.users[1].username, keybase1.TeamRole_ADMIN)
-	tt.users[1].waitForMetadataUpdateGregor("added back")
+	tt.users[1].waitForMetadataUpdateGregor("added to team")
 
-	// subsubteamRename, err := subteamName.Append("cc2")
-	// require.NoError(t, err)
-	// err = teams.RenameSubteam(context.TODO(), tt.users[0].tc.G, subsubteamName, subsubteamRename)
-	// require.NoError(t, err)
-	// tt.users[1].waitForMetadataUpdateGregor("team user was an implicit admin of changed name")
-	// tt.users[2].waitForMetadataUpdateGregor("team user was an implicit admin of changed name")
+	subsubteamRename, err := subteamName.Append("cc2")
+	require.NoError(t, err)
+	err = teams.RenameSubteam(context.TODO(), tt.users[0].tc.G, subsubteamName, subsubteamRename)
+	require.NoError(t, err)
+	tt.users[1].waitForMetadataUpdateGregor("team user was an implicit admin of changed name")
+	tt.users[2].waitForMetadataUpdateGregor("team user was an implicit admin of changed name")
 
-	// subteamRename, err := parentName.Append("bb2")
-	// require.NoError(t, err)
-	// err = teams.RenameSubteam(context.TODO(), tt.users[0].tc.G, subteamName, subteamRename)
-	// require.NoError(t, err)
-	// // Suboptimality - but it's fine since renames are rare.
-	// tt.users[1].waitForMetadataUpdateGregor("team user was an implicit admin of changed name (subteam)")
-	// tt.users[1].waitForMetadataUpdateGregor("team user was an implicit admin of changed name (subsubteam)")
-	// tt.users[2].waitForMetadataUpdateGregor("parent team of subteam you're in changed name")
+	subteamRename, err := parentName.Append("bb2")
+	require.NoError(t, err)
+	err = teams.RenameSubteam(context.TODO(), tt.users[0].tc.G, subteamName, subteamRename)
+	require.NoError(t, err)
+	// Suboptimality - but it's fine since renames are rare.
+	tt.users[1].waitForMetadataUpdateGregor("team user was an implicit admin of changed name (subteam)")
+	tt.users[1].waitForMetadataUpdateGregor("team user was an implicit admin of changed name (subsubteam)")
+	tt.users[2].waitForMetadataUpdateGregor("parent team of subteam you're in changed name")
 
-	// tt.users[0].changeTeamMember(parentName.String(), tt.users[1].username, keybase1.TeamRole_OWNER)
-	// tt.users[1].waitForMetadataUpdateGregor("now an owner")
+	tt.users[0].changeTeamMember(parentName.String(), tt.users[1].username, keybase1.TeamRole_OWNER)
+	tt.users[1].waitForMetadataUpdateGregor("now an owner")
 
-	// tt.users[0].teamSetSettings(subteamRename.String(), keybase1.TeamSettings{Open: true, JoinAs: keybase1.TeamRole_READER})
-	// tt.users[1].waitForMetadataUpdateGregor("settings change of subteam")
+	tt.users[0].teamSetSettings(subteamRename.String(), keybase1.TeamSettings{Open: true, JoinAs: keybase1.TeamRole_READER})
+	tt.users[1].waitForMetadataUpdateGregor("settings change of subteam")
 
-	// newSubsubteamName, err := subteamRename.Append("cc2")
-	// require.NoError(t, err)
-	// tt.users[0].teamSetSettings(newSubsubteamName.String(), keybase1.TeamSettings{Open: true, JoinAs: keybase1.TeamRole_WRITER})
-	// tt.users[1].waitForMetadataUpdateGregor("settings change of subsubteam")
-	// tt.users[0].teamSetSettings(newSubsubteamName.String(), keybase1.TeamSettings{Open: true, JoinAs: keybase1.TeamRole_READER})
-	// tt.users[1].waitForMetadataUpdateGregor("settings change of subsubteam")
+	newSubsubteamName, err := subteamRename.Append("cc2")
+	require.NoError(t, err)
+	tt.users[0].teamSetSettings(newSubsubteamName.String(), keybase1.TeamSettings{Open: true, JoinAs: keybase1.TeamRole_WRITER})
+	tt.users[1].waitForMetadataUpdateGregor("settings change of subsubteam")
+	tt.users[0].teamSetSettings(newSubsubteamName.String(), keybase1.TeamSettings{Open: true, JoinAs: keybase1.TeamRole_READER})
+	tt.users[1].waitForMetadataUpdateGregor("settings change of subsubteam")
 
-	// val := true
-	// err = tt.users[0].teamsClient.SetTeamShowcase(context.Background(), keybase1.SetTeamShowcaseArg{
-	// 	Name:        newSubsubteamName.String(),
-	// 	IsShowcased: &val,
-	// })
-	// require.NoError(tt.users[0].tc.T, err)
-	// tt.users[1].waitForMetadataUpdateGregor("change showcase")
+	val := true
+	err = tt.users[0].teamsClient.SetTeamShowcase(context.Background(), keybase1.SetTeamShowcaseArg{
+		Name:        newSubsubteamName.String(),
+		IsShowcased: &val,
+	})
+	require.NoError(tt.users[0].tc.T, err)
+	tt.users[1].waitForMetadataUpdateGregor("change showcase")
 
-	// desc := "desc"
-	// err = tt.users[0].teamsClient.SetTeamShowcase(context.Background(), keybase1.SetTeamShowcaseArg{
-	// 	Name:        newSubsubteamName.String(),
-	// 	IsShowcased: &val,
-	// 	Description: &desc,
-	// })
-	// require.NoError(tt.users[0].tc.T, err)
-	// tt.users[1].waitForMetadataUpdateGregor("change showcase")
+	desc := "desc"
+	err = tt.users[0].teamsClient.SetTeamShowcase(context.Background(), keybase1.SetTeamShowcaseArg{
+		Name:        newSubsubteamName.String(),
+		IsShowcased: &val,
+		Description: &desc,
+	})
+	require.NoError(tt.users[0].tc.T, err)
+	tt.users[1].waitForMetadataUpdateGregor("change showcase")
 
-	// err = tt.users[0].teamsClient.SetTeamShowcase(context.Background(), keybase1.SetTeamShowcaseArg{
-	// 	Name:              newSubsubteamName.String(),
-	// 	IsShowcased:       &val,
-	// 	Description:       &desc,
-	// 	AnyMemberShowcase: &val,
-	// })
-	// require.NoError(tt.users[0].tc.T, err)
-	// tt.users[1].waitForMetadataUpdateGregor("change showcase")
+	err = tt.users[0].teamsClient.SetTeamShowcase(context.Background(), keybase1.SetTeamShowcaseArg{
+		Name:              newSubsubteamName.String(),
+		IsShowcased:       &val,
+		Description:       &desc,
+		AnyMemberShowcase: &val,
+	})
+	require.NoError(tt.users[0].tc.T, err)
+	tt.users[1].waitForMetadataUpdateGregor("change showcase")
 
-	// tt.users[0].removeTeamMember(newSubsubteamName.String(), tt.users[2].username)
-	// tt.users[1].waitForMetadataUpdateGregor("someone else removed from team")
+	newteam := tt.users[1].createTeam()
+	newteamName, err := keybase1.TeamNameFromString(newteam)
+	require.NoError(t, err)
+	tt.users[1].waitForMetadataUpdateGregor("new team")
+	tt.users[1].addTeamMember(newteam, tt.users[0].username, keybase1.TeamRole_OWNER)
+	tt.users[1].waitForMetadataUpdateGregor("added someone to team")
 
-	// tt.users[0].addTeamMember(newSubsubteamName.String(), tt.users[2].username, keybase1.TeamRole_ADMIN)
-	// tt.users[1].waitForMetadataUpdateGregor("someone else added back")
+	tui := &teamsUI{}
+	err = teams.Delete(context.Background(), tt.users[0].tc.G, tui, newteamName.String())
+	require.NoError(tt.users[0].tc.T, err)
+	tt.users[1].waitForMetadataUpdateGregor("team deleted")
 
-	// newteam := tt.users[1].createTeam()
-	// newteamName, err := keybase1.TeamNameFromString(newteam)
-	// require.NoError(t, err)
-	// tt.users[1].waitForMetadataUpdateGregor("new team")
-	// tt.users[1].addTeamMember(newteam, tt.users[0].username, keybase1.TeamRole_OWNER)
-	// tt.users[1].waitForMetadataUpdateGregor("added someone to team")
-
-	// tui := &teamsUI{}
-	// err = teams.Delete(context.Background(), tt.users[0].tc.G, tui, newteamName.String())
-	// require.NoError(tt.users[0].tc.T, err)
-	// tt.users[1].waitForMetadataUpdateGregor("team deleted")
-
-	// tt.users[1].waitForNoMetadataUpdatesGregor()
+	tt.users[1].waitForNoMetadataUpdatesGregor()
 }
 
 func TestTeamLoadParentAfterRotate(t *testing.T) {
