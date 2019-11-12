@@ -1993,9 +1993,39 @@ func TestTeamRotateRace(t *testing.T) {
 	require.NoError(t, err)
 
 	tt.users[0].addTeamMember(parentName.String(), tt.users[1].username, keybase1.TeamRole_ADMIN)
-	tt.users[0].changeTeamMember(parentName.String(), tt.users[1].username, keybase1.TeamRole_READER)
+	tt.users[0].removeTeamMember(parentName.String(), tt.users[1].username)
+
+	fmt.Println(subsubteamName)
 
 	tt.users[0].teamSetSettings(subsubteamName.String(), keybase1.TeamSettings{Open: true, JoinAs: keybase1.TeamRole_WRITER})
 	time.Sleep(10 * time.Second)
 	tt.users[0].teamSetSettings(subsubteamName.String(), keybase1.TeamSettings{Open: true, JoinAs: keybase1.TeamRole_READER})
+}
+
+func TestTeamRotateRace2(t *testing.T) {
+	tt := newTeamTester(t)
+	defer tt.cleanup()
+
+	tt.addUser("alf")
+	tt.addUser("bra")
+
+	team := tt.users[0].createTeam()
+	parentName, err := keybase1.TeamNameFromString(team)
+	require.NoError(t, err)
+	_, err = teams.CreateSubteam(context.TODO(), tt.users[0].tc.G, "bb", parentName, keybase1.TeamRole_NONE /* addSelfAs */)
+	require.NoError(t, err)
+	subteamName, err := parentName.Append("bb")
+	require.NoError(t, err)
+	_, err = teams.CreateSubteam(context.TODO(), tt.users[0].tc.G, "cc", subteamName, keybase1.TeamRole_NONE /* addSelfAs */)
+	require.NoError(t, err)
+
+	tt.users[0].addTeamMember(subteamName.String(), tt.users[1].username, keybase1.TeamRole_ADMIN)
+
+	parentid, err := teams.ResolveNameToID(context.TODO(), tt.users[0].tc.G, parentName)
+	require.NoError(t, err)
+	err = teams.RotateKey(context.TODO(), tt.users[0].tc.G, keybase1.TeamRotateKeyArg{TeamID: parentid, Rt: keybase1.RotationType_HIDDEN})
+	require.NoError(t, err)
+
+	_, err = teams.Load(context.Background(), tt.users[1].tc.G, keybase1.LoadTeamArg{Name: subteamName.String()})
+	require.NoError(t, err)
 }
